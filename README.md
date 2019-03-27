@@ -2,8 +2,8 @@
 
 # **This module is converting json-files to html-text.**
 
-It used only standart python libraries for python 3.7, except pytest module.
-But it will be working with earlie python 3 versions also.
+It used only standart python libraries for python 3.6+, except pytest module.
+But it will be working with earlie python 3 versions also if you change f-strings to string.format().
 If you need to run any tests install pytest. Check the documentation in the current [tests modules](project/tests/test_tasks_output.py).
 If you no need default test from it project you may delete all folders that names 'tests'.
 
