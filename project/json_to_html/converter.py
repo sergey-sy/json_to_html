@@ -7,9 +7,11 @@ class HTMLTagsFactory:
     Class that makes html-tags from text,
     stores it in cache and return outside.
     """
-    
+    __close_tag_cache = None
+
     def __init__(self):
         self.__tags_cache = {}
+        self._parsed_json = []
 
     def get_pair_tags(self, open_tag):
         self.pair_tags = self.__tags_cache.get(open_tag)
@@ -18,6 +20,29 @@ class HTMLTagsFactory:
             self.__tags_cache[open_tag] = (f'<{open_tag}>', f'</{open_tag}>')
 
         return self.__tags_cache[open_tag]
+
+    def _parse_json(self, obj):
+        if isinstance(obj, dict):
+            self._parsed_json.append('<li>')
+            for key, value in obj.items():
+                open_tag, HTMLTagsFactory.__close_tag = self.get_pair_tags(key)
+                self._parsed_json.append(open_tag)
+                self._parse_json(value)
+            self._parsed_json.append('</li>')
+        elif isinstance(obj, list):
+            self._parsed_json.append('<ul>')
+            for item in obj:
+                self._parse_json(item)
+            self._parsed_json.append('</ul>')
+        else:
+            self._parsed_json.append(obj)
+            self._parsed_json.append(HTMLTagsFactory.__close_tag)
+
+
+    def get__parse_json(self, obj):
+        self._parsed_json = []
+        self._parse_json(obj)
+        return self._parsed_json
 
 
 class Converter:
@@ -42,15 +67,9 @@ class Converter:
             json_data = json.load(f)
             return json_data
 
-    def _convert_json_to_html(self, json_data: list) -> str:
+    def _convert_json_to_html(self, json_data) -> str:
         html_factory = HTMLTagsFactory()
-        html_list = []
-        for d in json_data:
-            for key, value in d.items():
-                start_tag, end_tag = html_factory.get_pair_tags(key)
-
-                html_list.extend([start_tag, value, end_tag])
-        
+        html_list = html_factory.get__parse_json(json_data)
         html_string = ''.join(html_list)
         return html_string
 

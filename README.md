@@ -26,19 +26,19 @@ Module takes 'source.json' file from folder: json_files, converts it to html-str
 ```json
 [
     {
-        "title": "Title #1",
-        "body": "Hello, World 1!"
+        "h3": "Title #1",
+        "div": "Hello, World 1!"
     },
     {
-        "title": "Title #2",
-        "body": "Hello, World 2!"
+        "h3": "Title #2",
+        "div": "Hello, World 2!"
     }
 ]
 ```
 
 ### Sample html-string out:
 ```
-<h1>Title #1</h1><p>Hello, World 1!</p><h1>Title #2</h1><p>Hello, World 2!</p>
+<ul><li><h3>Title #1</h3><div>Hello, World 1!</div></li><li><h3>Title #2</h3><div>Hello, World 2!</div></li></ul>
 ```
 
 
@@ -57,7 +57,7 @@ $ cd json_to_html/project
 ```
 ### Out:
 ```
-<h1>Title #1</h1><p>Hello, World 1!</p><h1>Title #2</h1><p>Hello, World 2!</p>
+<ul><li><h3>Title #1</h3><div>Hello, World 1!</div></li><li><h3>Title #2</h3><div>Hello, World 2!</div></li></ul>
 ```
 
 *If you need get current filepath use:*
