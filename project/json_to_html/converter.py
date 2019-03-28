@@ -7,7 +7,7 @@ class HTMLTagsWrapperFactory:
     Class that makes html-tags from text,
     stores it in cache and return outside.
     """
-    __close_tags_stack = []
+    __close_tags_stack = [] # it used for keep close tags with recursion function self._parse_json_list
 
     def __init__(self):
         self.__tags_cache = {}
@@ -32,34 +32,36 @@ class HTMLTagsWrapperFactory:
                                                         )
                 self._parsed_json.append(open_tag)
                 self._parse_json_list(value)
-            self._parsed_json.append('</li>')
+            HTMLTagsWrapperFactory.__close_tags_stack.append('</li>')
+
         elif isinstance(obj, list):
             self._parsed_json.append('<ul>')
             for item in obj:
                 self._parse_json_list(item)
-            self._parsed_json.append('</ul>')
+            HTMLTagsWrapperFactory.__close_tags_stack.append('</ul>')
+            self._parsed_json.append(
+                HTMLTagsWrapperFactory.__close_tags_stack.pop()
+                )
+            
         else:
             self._parsed_json.append(obj)
-            try:
-                # print(HTMLTagsWrapperFactory.__close_tags_stack)
+
+
+        try:
+            if HTMLTagsWrapperFactory.__close_tags_stack:
                 self._parsed_json.append(
                     HTMLTagsWrapperFactory.__close_tags_stack.pop()
-                    )
-                # print('лист', self._parsed_json)
-            except IndexError as err:
-                print(err)
-                print(f'{cls}.__close_tags_stack is empty list.'
-                    'Impossible pop() from empty list'
-                    )
-        print(self._parsed_json)
-        print(HTMLTagsWrapperFactory.__close_tags_stack)
-        # if HTMLTagsWrapperFactory.__close_tags_stack:
-        #     self._parsed_json.append(
-        #         HTMLTagsWrapperFactory.__close_tags_stack.pop()
-        #     )
+                )
+        except IndexError as err:
+            print(err)
+            print(f'{cls}.__close_tags_stack is empty list.'
+                  'Impossible pop() from empty list')
 
 
     def _parse_json_dict(self, obj):
+        """
+        This function go through all objects in obj with depth recursion and wrap dicts and lists in html-tags
+        """
         if isinstance(obj, dict):
             for key, value in obj.items():
                 open_tag, HTMLTagsWrapperFactory.__close_tag = (
@@ -136,6 +138,7 @@ class Converter:
 
 
 if __name__ == '__main__':
+    # use it for check how to working current module
     print('start')
     conv = Converter('../../json_files/source.json')
     print(conv.get_file_path())
