@@ -41,17 +41,22 @@ class HTMLTagsWrapperFactory:
         else:
             self._parsed_json.append(obj)
             try:
-                print(HTMLTagsWrapperFactory.__close_tags_stack)
+                # print(HTMLTagsWrapperFactory.__close_tags_stack)
                 self._parsed_json.append(
                     HTMLTagsWrapperFactory.__close_tags_stack.pop()
                     )
-                print('лист', self._parsed_json)
+                # print('лист', self._parsed_json)
             except IndexError as err:
                 print(err)
                 print(f'{cls}.__close_tags_stack is empty list.'
                     'Impossible pop() from empty list'
                     )
+        print(self._parsed_json)
         print(HTMLTagsWrapperFactory.__close_tags_stack)
+        # if HTMLTagsWrapperFactory.__close_tags_stack:
+        #     self._parsed_json.append(
+        #         HTMLTagsWrapperFactory.__close_tags_stack.pop()
+        #     )
 
 
     def _parse_json_dict(self, obj):
@@ -80,7 +85,7 @@ class HTMLTagsWrapperFactory:
             raise Exception(
                 'Something went wrong, JSON-data contains invalid data format'
                 )
-            
+
         return self._parsed_json
 
 
