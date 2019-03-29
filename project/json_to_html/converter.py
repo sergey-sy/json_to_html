@@ -1,8 +1,42 @@
 import json
 import os
+import re
+from html import escape
 
 
-class HTMLTagsWrapperFactory:
+class HTMLClassIdFormatter:
+    """Class that transform text-strings to html-format text"""
+
+    def _get_tag_classes_id(self, text_value):
+        class_ = []
+        id_ = ''
+
+        tag, *items = re.split('[.#]', text_value)
+        prefixs = re.findall('[.#]', text_value)
+        if items:
+            items[-1] = items[-1].rstrip('>') # strip last symbol in strings like 'my-class2">'
+
+        for prefix, value in zip(prefixs, items):
+            if prefix == '#':
+                id_ = value
+            else:
+                class_.append(value)
+
+        return tag, ' '.join(class_), id_
+
+    def format_key(self, text):
+        """Transform expressions like 'p.my-class1.my-class2' to next format '<p class="my-class1 my-class2">' """
+        tag, classes, id_ = self._get_tag_classes_id(text)
+        id_text = f' id="{id_}"' if id_ else ''
+        classes_text = f' class="{"".join(classes)}"' if classes else ''
+
+        transformed = f'{tag}{id_text}{classes_text}>'
+        closed_tag = f'</{tag[1:]}>'
+
+        return transformed, closed_tag
+
+
+class HTMLTagsWrapperFactory(HTMLClassIdFormatter):
     """
     Class that makes html-tags from text,
     stores it in cache and return outside.
@@ -13,7 +47,7 @@ class HTMLTagsWrapperFactory:
         self.__tags_cache = {}
         self._parsed_json = []
 
-    def get_pair_tags(self, open_tag):
+    def _get_pair_tags(self, open_tag):
         self.pair_tags = self.__tags_cache.get(open_tag)
 
         if not self.pair_tags:  # save new tags to cache
@@ -25,7 +59,7 @@ class HTMLTagsWrapperFactory:
         if isinstance(obj, dict):
             self._parsed_json.append('<li>')
             for key, value in obj.items():
-                open_close_tags = self.get_pair_tags(key)
+                open_close_tags = self._get_pair_tags(key)
                 open_tag = open_close_tags[0]
                 HTMLTagsWrapperFactory.__close_tags_stack.append(
                                                         open_close_tags[1]
@@ -42,7 +76,7 @@ class HTMLTagsWrapperFactory:
             self._parsed_json.append(
                 HTMLTagsWrapperFactory.__close_tags_stack.pop()
                 )
-            
+
         else:
             self._parsed_json.append(obj)
 
@@ -54,9 +88,8 @@ class HTMLTagsWrapperFactory:
                 )
         except IndexError as err:
             print(err)
-            print(f'{cls}.__close_tags_stack is empty list.'
+            print(f'{self}.__close_tags_stack is empty list.'
                   'Impossible pop() from empty list')
-
 
     def _parse_json_dict(self, obj):
         """
@@ -65,7 +98,7 @@ class HTMLTagsWrapperFactory:
         if isinstance(obj, dict):
             for key, value in obj.items():
                 open_tag, HTMLTagsWrapperFactory.__close_tag = (
-                                                        self.get_pair_tags(key)
+                                                        self._get_pair_tags(key)
                                                         )
                 self._parsed_json.append(open_tag)
                 self._parse_json_dict(value)
@@ -76,13 +109,35 @@ class HTMLTagsWrapperFactory:
             self._parsed_json.append(obj)
             self._parsed_json.append(HTMLTagsWrapperFactory.__close_tag)
 
+    def _parse_json_dict_escape(self, obj):
+        """
+        This function go through all objects in obj with depth recursion and
+        transfer text to html valid classes & id expressions.
+        """
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                open_tag, HTMLTagsWrapperFactory.__close_tag = (
+                                                        self._get_pair_tags(key)
+                                                        )
+                open_tag, closed_tag = self.format_key(open_tag)
+                self._parsed_json.append(open_tag)
+                self._parse_json_dict_escape(value)
+                self._parsed_json.append(closed_tag)
+        elif isinstance(obj, list):
+            for item in obj:
+                self._parse_json_dict_escape(item)
+        else:
+            self._parsed_json.append(escape(obj))
 
     def get__parse_json_list(self, obj):
         self._parsed_json = []
         if isinstance(obj, list):
             self._parse_json_list(obj)
         elif isinstance(obj, dict):
-            self._parse_json_dict(obj)
+            if any([True for key in obj.keys() if 'id' in key or 'class' in key]):
+                self._parse_json_dict_escape(obj)
+            else:
+                self._parse_json_dict(obj)
         else:
             raise Exception(
                 'Something went wrong, JSON-data contains invalid data format'

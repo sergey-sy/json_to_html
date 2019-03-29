@@ -1,5 +1,5 @@
 """
-For run current test-file install pytest package.
+To run current test-file install pytest package.
 https://docs.pytest.org/en/latest/getting-started.html
 
 Execute the commands bellow to start test-process:
@@ -48,4 +48,13 @@ def test_task4_2_output():
     conv._file_path = 'tests/test_source/source_4_2.json'
     html_string = conv.convert()
     sample_string = '<p>hello1</p>'
+    assert html_string == sample_string
+
+
+def test_task5_output():
+    print('Test-task-5')
+    conv = converter.Converter()
+    conv._file_path = 'tests/test_source/source_5.json'
+    html_string = conv.convert()
+    sample_string = '<p id="my-id" class="my-class">hello</p><p class="my-class1 my-class2">example&lt;a&gt;asd&lt;/a&gt;</p>'
     assert html_string == sample_string
